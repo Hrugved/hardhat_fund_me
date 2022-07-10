@@ -14,7 +14,7 @@ describe("FundMe", async function () {
   })
   describe("contructor", async function () {
     it("sets the aggregator adresses correctly", async function () {
-      const response = await fundme.priceFeed()
+      const response = await fundme.s_priceFeed()
       assert.equal(response, mockV3Aggregator.address)
     })
   })
@@ -26,12 +26,12 @@ describe("FundMe", async function () {
     })
     it("update the amount funded data structure", async function () {
       await fundme.fund({ value: sendValue })
-      const response = await fundme.addressToAmountFunded(deployer)
+      const response = await fundme.s_addressToAmountFunded(deployer)
       assert.equal(response.toString(), sendValue.toString())
     })
-    it("adds funder to array of funders", async function () {
+    it("adds funder to array of s_funders", async function () {
       await fundme.fund({ value: sendValue })
-      const funder = await fundme.funders(0)
+      const funder = await fundme.s_funders(0)
       assert.equal(funder, deployer)
     })
   })
@@ -61,7 +61,7 @@ describe("FundMe", async function () {
         endingDeployerBalance.add(gasCost).toString()
       )
     })
-    it("witdraws from multiple funders", async function() {
+    it("witdraws from multiple s_funders", async function() {
       // arrange
       const accounts = await ethers.getSigners()
       for(let i=1;i<6;i++) {
@@ -87,9 +87,9 @@ describe("FundMe", async function () {
         startingFundmeBalance.add(startingDeployerBalance).toString(),
         endingDeployerBalance.add(gasCost).toString()
       )
-      await expect(fundme.funders(0)).to.be.reverted
+      await expect(fundme.s_funders(0)).to.be.reverted
       for(i=1;i<6;i++) {
-        assert.equal(await fundme.addressToAmountFunded(accounts[i].address),0)
+        assert.equal(await fundme.s_addressToAmountFunded(accounts[i].address),0)
       }
     })
     it('only allows the owner to withdraw', async function() {

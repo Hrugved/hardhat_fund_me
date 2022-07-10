@@ -3,16 +3,16 @@ pragma solidity ^0.8.8;
 
 import "./PriceConverter.sol";
 
-error FundMe__NotOwner();
+error FundMe__NotOwner(); // cheaper than revert statements with stringsm which are needed to be stored on chain
 
 contract FundMe {
   using PriceConverter for uint256;
 
   uint256 public constant MIN_USD = 50 * 1e18;
-  address[] public s_funders;
-  mapping(address => uint256) public s_addressToAmountFunded;
-  address public immutable i_owner;
-  AggregatorV3Interface public s_priceFeed;
+  address[] private s_funders;
+  mapping(address => uint256) private s_addressToAmountFunded;
+  address private immutable i_owner;
+  AggregatorV3Interface private s_priceFeed;
 
   constructor(address priceFeedAddress) {
     i_owner = msg.sender;
@@ -26,6 +26,14 @@ contract FundMe {
     _;
   }
 
+  receive() external payable {
+    fund();
+  }
+
+  fallback() external payable {
+    fund();
+  }
+
   function fund() public payable {
     require(
       msg.value.getConversionRate(s_priceFeed) >= MIN_USD,
@@ -36,6 +44,8 @@ contract FundMe {
   }
 
   function withdraw() public onlyOwner {
+    // reading from storage is expensive, 
+    // so better to read entire array first into memory and the interact with it (gas optimization)
     address[] memory funders = s_funders;
     for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
       address funder = funders[funderIndex];
@@ -48,11 +58,20 @@ contract FundMe {
     require(callSuccess, "call failed");
   }
 
-  receive() external payable {
-    fund();
+  function getOwner() public view returns (address) {
+    return i_owner;
   }
 
-  fallback() external payable {
-    fund();
+  function getFunder(uint256 index) public view returns (address) {
+    return s_funders[index];
   }
+
+  function getAddressToAmountFunded(address funder) public view returns (uint256) {
+    return s_addressToAmountFunded[funder];
+  }
+
+  function getPriceFeed() public view returns (AggregatorV3Interface) {
+    return s_priceFeed;
+  }
+
 }

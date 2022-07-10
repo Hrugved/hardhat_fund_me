@@ -1,6 +1,8 @@
 const { assert, expect } = require("chai")
 const { getNamedAccounts, deployments, ethers } = require("hardhat")
+const { devChains } = require("../../helper-hardhat-config")
 
+!devChains.includes(network.name) ? describe.skip : 
 describe("FundMe", async function () {
   let deployer
   let fundme
@@ -14,7 +16,7 @@ describe("FundMe", async function () {
   })
   describe("contructor", async function () {
     it("sets the aggregator adresses correctly", async function () {
-      const response = await fundme.s_priceFeed()
+      const response = await fundme.getPriceFeed()
       assert.equal(response, mockV3Aggregator.address)
     })
   })
@@ -26,12 +28,12 @@ describe("FundMe", async function () {
     })
     it("update the amount funded data structure", async function () {
       await fundme.fund({ value: sendValue })
-      const response = await fundme.s_addressToAmountFunded(deployer)
+      const response = await fundme.getAddressToAmountFunded(deployer)
       assert.equal(response.toString(), sendValue.toString())
     })
     it("adds funder to array of s_funders", async function () {
       await fundme.fund({ value: sendValue })
-      const funder = await fundme.s_funders(0)
+      const funder = await fundme.getFunder(0)
       assert.equal(funder, deployer)
     })
   })
@@ -87,9 +89,9 @@ describe("FundMe", async function () {
         startingFundmeBalance.add(startingDeployerBalance).toString(),
         endingDeployerBalance.add(gasCost).toString()
       )
-      await expect(fundme.s_funders(0)).to.be.reverted
+      await expect(fundme.getFunder(0)).to.be.reverted
       for(i=1;i<6;i++) {
-        assert.equal(await fundme.s_addressToAmountFunded(accounts[i].address),0)
+        assert.equal(await fundme.getAddressToAmountFunded(accounts[i].address),0)
       }
     })
     it('only allows the owner to withdraw', async function() {
